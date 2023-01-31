@@ -17,7 +17,7 @@ const user_1 = __importDefault(require("../models/user"));
 const getUsers = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const users = yield user_1.default.findAll();
     res.json({
-        users
+        users,
     });
 });
 exports.getUsers = getUsers;
@@ -26,38 +26,67 @@ const getUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const user = yield user_1.default.findByPk(id);
     if (!user) {
         return res.status(404).json({
-            msg: `User with id ${id} not found`
+            msg: `User with id ${id} not found`,
         });
     }
     res.json(user);
 });
 exports.getUser = getUser;
-const postUser = (req, res) => {
+const postUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { body } = req;
-    res.json({
-        ok: true,
-        msg: 'postUser',
-        body
-    });
-};
+    try {
+        const existEmail = yield user_1.default.findOne({
+            where: {
+                email: body.email,
+            },
+        });
+        if (existEmail) {
+            return res.status(400).json({
+                msg: `Email ${body.email} already exists`,
+            });
+        }
+        const user = user_1.default.build(body);
+        yield user.save();
+        res.json({
+            user,
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            msg: "Something went wrong",
+        });
+    }
+});
 exports.postUser = postUser;
-const putUser = (req, res) => {
+const putUser = (req, res) => __awaiter(void 0, void 0, void 0, function* () {
     const { id } = req.params;
     const { body } = req;
-    res.json({
-        ok: true,
-        msg: 'putUser',
-        id,
-        body
-    });
-};
+    try {
+        const user = yield user_1.default.findByPk(id);
+        if (!user) {
+            return res.status(404).json({
+                msg: `User with id ${id} not found`,
+            });
+        }
+        // need to validate email
+        yield user.update(body);
+        res.json({
+            user,
+        });
+    }
+    catch (error) {
+        res.status(500).json({
+            msg: "Something went wrong",
+        });
+    }
+});
 exports.putUser = putUser;
 const deleteUser = (req, res) => {
     const { id } = req.params;
     res.json({
         ok: true,
-        msg: 'deleteUser',
-        id
+        msg: "deleteUser",
+        id,
     });
 };
 exports.deleteUser = deleteUser;
